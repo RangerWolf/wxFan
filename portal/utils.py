@@ -13,19 +13,37 @@ def smart_action(nickname, content) :
     :param content: 
     :return: 
     """
-    if content is None :
+    if content is None or content == u"@饭饭饭":
         return empty_data()
 
-    if content == "fan" or u"饭" in content:
+    if u"@饭饭饭" in content :
+        content = content.replace(u"@饭饭饭", "")
+
+    if "-1" in content :
+        tmp_content = content.replace("-1", "")
+        return order_cancel()
+
+    # 有可能内容就是英文名
+    if "+1" in content :
+        tmp_content = content.replace("+1", "")
+    else :
+        tmp_content = content
+    resp = requests.get("http://10.206.131.12/api/user-search?identity=%s" % tmp_content).text
+    if resp != "404 Not Found" :
+        return order_new(tmp_content)
+
+    if content == "fan" or u"饭" in content or content == "+1":
         return order_new(nickname)
 
     if content == "cancel" or u"取消" in content :
         return order_cancel(nickname)
 
+    return u"你说的话我还不认识：" + content
+
 def order_cancel(nickname) :
     # step 1: 获取order id
     # step 2: 根据order id 取消订单
-    pass
+    return u'目前还不支持取消'
 
 def empty_data() :
     return "出错：内容为空"
