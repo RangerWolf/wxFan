@@ -5,7 +5,7 @@ import requests
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 reload(sys)
 sys.setdefaultencoding('utf-8')
-
+cur_file_path = os.path.dirname(os.path.realpath(__file__))
 
 def smart_action(nickname, content) :
     """
@@ -28,8 +28,8 @@ def smart_action(nickname, content) :
         tmp_content = content.replace("+1", "")
     else :
         tmp_content = content
-    resp = requests.get("http://10.206.131.12/api/user-search?identity=%s" % tmp_content).text
-    if resp != "404 Not Found" :
+    resp = get_psid(tmp_content)
+    if resp is not None :
         return order_new(tmp_content)
 
     if content == "fan" or u"饭" in content or content == "+1":
@@ -46,13 +46,13 @@ def order_cancel(nickname) :
     return u'目前还不支持取消'
 
 def empty_data() :
-    return "出错：内容为空"
+    return u"出错：内容为空"
 
 def order_new(nickname) :
     # step1 : 根据nickname获取其工号与部门代码
-    resp = requests.get("http://10.206.131.12/api/user-search?identity=%s" % nickname).text
-    if resp == "404 Not Found":
-        return u"自动寻找工号失败， 请将你的昵称改成类似：wenjun yang的形式"
+    resp = get_psid(nickname)
+    if resp is None :
+        return u"还不知道你的工号, 请告诉我你的英文名, 比如: wenjun yang"
 
     psid = json.loads(resp)['psid']
     depcode = json.loads(resp)['depcode']
@@ -79,3 +79,35 @@ def order_new(nickname) :
         return ret_msg
     else:
         return "订饭失败：" + resp
+
+
+def get_psid(nickname) :
+    cache_file_name = os.path.join(cur_file_path, "psid_cache.json")
+    jsondata = {}
+    # 先从本地缓存获取
+    if os.path.exists(cache_file_name) :
+        fobj = open(cache_file_name, 'r')
+        strdata = fobj.read()
+
+        if strdata is not None and len(strdata.strip()) > 0 :
+            jsondata = json.loads(strdata)
+            fobj.close()
+            if nickname in jsondata :
+                print "found nickname info in cache file"
+                return jsondata[nickname]
+
+    # 否则尝试从api获取并在本地缓存
+    resp = requests.get("http://10.206.131.12/api/user-search?identity=%s" % nickname).text
+    if resp == "404 Not Found":
+        return None
+    else :
+        jsondata[nickname] = json.loads(resp)
+        with open(cache_file_name, 'w') as fp:
+            json.dump(jsondata, fp)
+
+        return resp
+
+
+
+if __name__ == '__main__':
+    get_psid("wenjun yang")
