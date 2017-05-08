@@ -29,4 +29,4 @@ def smart_reply():
     return ret_msg
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5000, threaded=True, debug=True)
+    app.run(host="0.0.0.0", port=5678, threaded=True, debug=True)
