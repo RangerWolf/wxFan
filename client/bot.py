@@ -29,7 +29,7 @@ def text_reply(msg):
         import requests
         ret_msg = requests.post("http://localhost:5678/smart_reply", data=json.dumps(msg)).text
         print "ret_msg:", ret_msg
-        itchat.send(ret_msg, msg['FromUserName'])
+        itchat.send("@" + ret_msg['ActualNickName'] + ":" + ret_msg, msg['FromUserName'])
 
 itchat.auto_login(True, enableCmdQR=True)
 itchat.run()
