@@ -27,9 +27,9 @@ def add_friend(msg):
 def text_reply(msg):
     if msg['isAt']:
         import requests
-        ret_msg = requests.post("http://localhost:5000/smart_reply", data=json.dumps(msg)).text
+        ret_msg = requests.post("http://localhost:5678/smart_reply", data=json.dumps(msg)).text
         print "ret_msg:", ret_msg
         itchat.send(ret_msg, msg['FromUserName'])
 
-itchat.auto_login(True)
+itchat.auto_login(True, enableCmdQR=True)
 itchat.run()
