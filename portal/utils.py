@@ -88,6 +88,9 @@ def order_new(psid_dict) :
         if data['failure_count'] > 0:
             ret_msg += '有' + str(data['failure_count']) + '份单出错而无法预定. 请退出重新登录确认是否存在账号异常.';
 
+        if data['exceed_count'] > 0 :
+            ret_msg += "亲， 只能点1份哦， 小心吃胖^_^"
+
         return ret_msg
     else:
         return "订饭失败：" + resp
