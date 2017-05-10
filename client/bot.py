@@ -2,13 +2,18 @@
 
 import sys, os, json
 import platform
+import schedule
+import thread
+from datetime import datetime
+import itchat, time
+from itchat.content import *
+
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
 
-import itchat, time
-from itchat.content import *
 
 @itchat.msg_register([TEXT, MAP, CARD, NOTE, SHARING])
 def text_reply(msg):
@@ -26,6 +31,7 @@ def add_friend(msg):
 
 @itchat.msg_register(TEXT, isGroupChat=True)
 def text_reply(msg):
+    print json.dumps(msg)
     if msg['isAt']:
         import requests
         ret_msg = requests.post("http://localhost:5678/smart_reply", data=json.dumps(msg)).text
@@ -35,10 +41,41 @@ def text_reply(msg):
         if msg["Content"] in ["fan", "饭", "+1"] :
             itchat.send("@" + msg['ActualNickName'] + " :" + u'您是要订饭吗？ 订饭请直接@我 ^_^', msg['FromUserName'])
 
-enableCmdQR=True
-is_windows = any(platform.win32_ver())
-if is_windows :
-    enableCmdQR = False
+def auto_notify_fan(thread_name) :
+    """
+    每天3点钟， 自动提醒大家订饭
+    :return:
+    """
+    def daily_notify() :
+        print "now:", datetime.now()
+        print "automatically message :", u"测试： 今天没订饭的同学们记得订饭哦"
 
-itchat.auto_login(True, enableCmdQR=enableCmdQR)
-itchat.run()
+        target_chatroom_nickname = "wxbot_dev"
+        target_chatroom_nickname = u"CDC自动订饭群-Dev阶段"
+
+        chatrooms = itchat.get_chatrooms()
+        for room in chatrooms :
+            if room['NickName'] == target_chatroom_nickname :
+                room_id = room['UserName']
+                print "send message to id:", room_id
+                itchat.send(u"每天自动提醒： 今天没订饭的同学们记得订饭哦", room_id)
+
+    schedule.every().day.at("15:15").do(daily_notify)
+
+    while True:
+        schedule.run_pending()
+        time.sleep(10)
+
+if __name__ == '__main__':
+    enableCmdQR=True
+    is_windows = any(platform.win32_ver())
+    if is_windows :
+        enableCmdQR = False
+
+    itchat.auto_login(True, enableCmdQR=enableCmdQR)
+
+    thread.start_new_thread(auto_notify_fan, ("test thread",))
+
+    print json.dumps(itchat.get_chatrooms())
+
+    itchat.run()
