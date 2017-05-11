@@ -34,9 +34,13 @@ def text_reply(msg):
     print json.dumps(msg)
     if msg['isAt']:
         import requests
-        ret_msg = requests.post("http://localhost:5678/smart_reply", data=json.dumps(msg)).text
-        print "ret_msg:", ret_msg
-        itchat.send("@" + msg['ActualNickName'] + " :" + ret_msg, msg['FromUserName'])
+        try :
+            ret_msg = requests.post("http://localhost:5678/smart_reply", data=json.dumps(msg)).text
+            print "ret_msg:", ret_msg
+            itchat.send("@" + msg['ActualNickName'] + " :" + ret_msg, msg['FromUserName'])
+        except Exception, ex:
+            print ex
+            itchat.send("@" + msg['ActualNickName'] + " :" + u"服务器开小差啦~", msg['FromUserName'])
     else :
         if msg["Content"] in ["fan", "饭", "+1"] :
             itchat.send("@" + msg['ActualNickName'] + " :" + u'您是要订饭吗？ 订饭请直接@我 ^_^', msg['FromUserName'])
